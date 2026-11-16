@@ -1,1 +1,4 @@
 common --enable_bzlmod
+# Unrelated to the bug: on macOS with Bazel 9.3.2, grpc's layering_check fails
+# in chttp2_transport.cc even though the dependency is declared (passes on 9.1.0).
+build --features=-layering_check
