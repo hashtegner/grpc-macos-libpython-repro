@@ -1,0 +1,16 @@
+--- a/src/python/grpcio/grpc/_cython/_cygrpc/private_key_signing/BUILD.bazel
++++ b/src/python/grpcio/grpc/_cython/_cygrpc/private_key_signing/BUILD.bazel
+@@ -42,6 +42,11 @@
+         "//:gpr",
+         "//:grpc",
+         "@rules_python//python/cc:current_py_cc_headers",
+-        "@rules_python//python/cc:current_py_cc_libs",
+-    ],
++    ] + select({
++        # macOS binds symbols per dylib (two-level namespace): linking libpython
++        # loads a second, uninitialized interpreter and import grpc segfaults.
++        # cygrpc.so already links with -undefined dynamic_lookup there.
++        "@platforms//os:macos": [],
++        "//conditions:default": ["@rules_python//python/cc:current_py_cc_libs"],
++    }),
+ )

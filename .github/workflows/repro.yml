@@ -6,21 +6,25 @@ on:
 
 jobs:
   import-grpc:
+    name: ${{ matrix.os }} workaround=${{ matrix.workaround }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-15, ubuntu-24.04]
+        workaround: [false, true]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Apply workaround (drop current_py_cc_libs on macOS)
+        if: matrix.workaround
+        run: |
+          sed -i.bak 's|patches = \["//patches:grpc_bazel9_address_sorting.patch"\],|patches = ["//patches:grpc_bazel9_address_sorting.patch", "//patches:fix_cygrpc_macos_libpython.patch"],|' MODULE.bazel
+          grep -n fix_cygrpc MODULE.bazel
       - name: bazel run //:import_grpc
-        run: bazelisk run //:import_grpc
-      - name: Show what cygrpc.so links against
+        run: PYTHONFAULTHANDLER=1 bazelisk run //:import_grpc
+      - name: Show libpython linkage of cygrpc.so and python3
         if: always()
         run: |
-          so=$(find -L bazel-bin/external -name 'cygrpc.so' | head -1)
-          echo "$so"
-          if [ "$(uname)" = Darwin ]; then otool -L "$so"; else ldd "$so"; fi
-          py=$(find -L bazel-*/external -path '*python_3_10*' -name python3 -type f | head -1)
-          echo "$py"
-          if [ "$(uname)" = Darwin ]; then otool -L "$py"; else ldd "$py"; fi
+          so=bazel-bin/external/grpc+/src/python/grpcio/grpc/_cython/cygrpc.so
+          py=$(bazelisk info output_base)/external/rules_python++python+python_3_10_$(uname -m | sed 's/arm64/aarch64/')-*/bin/python3.10
+          if [ "$(uname)" = Darwin ]; then otool -L $so $py; else ldd $so $py; fi

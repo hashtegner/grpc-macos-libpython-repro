@@ -1,10 +1,27 @@
 module(name = "grpc_macos_libpython_repro")
 
 bazel_dep(name = "grpc", version = "1.80.0")
-bazel_dep(name = "rules_python", version = "1.6.3")
+single_version_override(
+    module_name = "grpc",
+    patch_strip = 1,
+    # Unrelated to this bug: grpc 1.80.0 calls native.cc_library from a .bzl,
+    # which Bazel 9 removed. Needed only so grpc builds on Bazel 9.
+    patches = ["//patches:grpc_bazel9_address_sorting.patch"],
+    version = "1.80.0",
+)
+bazel_dep(name = "rules_python", version = "2.4.6")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     is_default = True,
     python_version = "3.10",
 )
+
+# grpc's aio package imports typing_extensions without declaring it.
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pip",
+    python_version = "3.10",
+    requirements_lock = "//:requirements.txt",
+)
+use_repo(pip, "pip")

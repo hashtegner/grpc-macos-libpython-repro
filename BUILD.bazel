@@ -3,12 +3,18 @@ load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 py_binary(
     name = "import_grpc",
     srcs = ["import_grpc.py"],
-    deps = ["@grpc//src/python/grpcio/grpc:grpcio"],
+    deps = [
+        "@grpc//src/python/grpcio/grpc:grpcio",
+        "@pip//typing_extensions",
+    ],
 )
 
 py_test(
     name = "import_grpc_test",
     srcs = ["import_grpc.py"],
     main = "import_grpc.py",
-    deps = ["@grpc//src/python/grpcio/grpc:grpcio"],
+    deps = [
+        "@grpc//src/python/grpcio/grpc:grpcio",
+        "@pip//typing_extensions",
+    ],
 )
