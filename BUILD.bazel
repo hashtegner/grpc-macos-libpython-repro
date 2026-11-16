@@ -1,20 +1,7 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 py_binary(
     name = "import_grpc",
     srcs = ["import_grpc.py"],
-    deps = [
-        "@grpc//src/python/grpcio/grpc:grpcio",
-        "@pip//typing_extensions",
-    ],
-)
-
-py_test(
-    name = "import_grpc_test",
-    srcs = ["import_grpc.py"],
-    main = "import_grpc.py",
-    deps = [
-        "@grpc//src/python/grpcio/grpc:grpcio",
-        "@pip//typing_extensions",
-    ],
+    deps = ["@grpc//src/python/grpcio/grpc:grpcio"],
 )

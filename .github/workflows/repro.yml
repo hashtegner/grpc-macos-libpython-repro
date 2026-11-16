@@ -18,7 +18,13 @@ jobs:
       - name: Apply workaround (drop current_py_cc_libs on macOS)
         if: matrix.workaround
         run: |
-          sed -i.bak 's|patches = \["//patches:grpc_bazel9_address_sorting.patch"\],|patches = ["//patches:grpc_bazel9_address_sorting.patch", "//patches:fix_cygrpc_macos_libpython.patch"],|' MODULE.bazel
+          cat >> MODULE.bazel <<'OVR'
+          single_version_override(
+              module_name = "grpc",
+              patch_strip = 1,
+              patches = ["//patches:fix_cygrpc_macos_libpython.patch"],
+          )
+          OVR
           grep -n fix_cygrpc MODULE.bazel
       - name: bazel run //:import_grpc
         run: PYTHONFAULTHANDLER=1 bazelisk run //:import_grpc
