@@ -1,3 +1,5 @@
 common --enable_bzlmod
 build --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
 common --incompatible_autoload_externally=cc_library,cc_binary,cc_test,cc_import,cc_shared_library,fdo_prefetch_hints,fdo_profile,memprof_profile,propeller_optimize,sh_binary,sh_library,sh_test
+# Unrelated to the bug: grpc 1.80.0 fails layering_check on macOS with newer Bazel.
+build --features=-layering_check
