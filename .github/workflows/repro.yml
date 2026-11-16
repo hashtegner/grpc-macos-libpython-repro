@@ -1,0 +1,26 @@
+name: repro
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  import-grpc:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: bazel run //:import_grpc
+        run: bazelisk run //:import_grpc
+      - name: Show what cygrpc.so links against
+        if: always()
+        run: |
+          so=$(find -L bazel-bin/external -name 'cygrpc.so' | head -1)
+          echo "$so"
+          if [ "$(uname)" = Darwin ]; then otool -L "$so"; else ldd "$so"; fi
+          py=$(find -L bazel-*/external -path '*python_3_10*' -name python3 -type f | head -1)
+          echo "$py"
+          if [ "$(uname)" = Darwin ]; then otool -L "$py"; else ldd "$py"; fi
