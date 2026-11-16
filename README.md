@@ -1,22 +1,24 @@
 # grpc-macos-libpython-repro
 
-Minimal reproduction: on macOS, `import grpc` segfaults when grpcio 1.80.0 is
-built from source with Bazel against the hermetic rules_python interpreter.
+Minimal reproduction: on macOS, `import grpc` segfaults when grpcio is built
+from source with Bazel against the hermetic rules_python interpreter.
 
 ```sh
 bazelisk run //:import_grpc
 ```
 
 - macOS arm64: segfault (exit 139) while loading `cygrpc.so` in `import grpc`.
-- Linux: `grpc 1.80.0 imported OK`.
+- Linux: `grpc 1.85.1 imported OK`.
 
-Versions: Bazel 9.1.0, grpc 1.80.0 (BCR), rules_python 2.4.6, Python 3.10.22
-(python-build-standalone). With rules_python 1.6.3 (an older 3.10 build whose
-`python3` links `libpython3.10.dylib` dynamically) the import works, since only
+Versions: Bazel 9.3.2, grpc 1.85.1 (latest on BCR), rules_python 2.5.1,
+Python 3.10.22 (python-build-standalone). It also reproduces with grpc 1.80.0
+and Bazel 9.1.0. With rules_python 1.6.3, whose 3.10 build has a `python3`
+that links `libpython3.10.dylib` dynamically, the import works, because only
 one libpython is loaded.
 
-`patches/grpc_bazel9_address_sorting.patch` and the `--incompatible_autoload_externally`
-flag are unrelated to the bug; they only make grpc 1.80.0 build on Bazel 9.
+`--features=-layering_check` in `.bazelrc` is unrelated to the bug. On macOS
+with Bazel 9.3.2, grpc's layering_check fails in `chttp2_transport.cc`, even
+though the dependency is declared. It passes on Bazel 9.1.0.
 
 ## Why
 
@@ -34,4 +36,5 @@ drops `current_py_cc_libs` on macOS; `cygrpc.so` already links with
 `-undefined dynamic_lookup` there. With it, the import works.
 
 The [`repro` workflow](.github/workflows/repro.yml) runs it on `macos-15` and
-`ubuntu-24.04`, with and without the workaround, and prints `otool -L` / `ldd` for `cygrpc.so` and `python3`.
+`ubuntu-24.04`, with and without the workaround, and prints `otool -L` / `ldd`
+for `cygrpc.so` and `python3`.
